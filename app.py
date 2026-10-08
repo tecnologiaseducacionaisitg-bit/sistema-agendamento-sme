@@ -11,7 +11,14 @@ def carregar_dados():
     return pd.read_csv(DB_FILE)
   else:
     return pd.DataFrame(
-        columns=["Nome", "Setor", "Data", "Turno", "Motivo"]
+        columns=[
+            "Nome",
+            "Setor",
+            "Data",
+            "Turno",
+            "Datashow",
+            "Motivo",
+        ]
     )
 
 
@@ -41,6 +48,9 @@ with aba1:
     )
     turno = st.selectbox(
         "Turno", ["Manhã (08h às 12h)", "Tarde (13h às 17h)", "Dia Todo"]
+    )
+    datashow = st.selectbox(
+        "Vai precisar de Datashow?", ["Não", "Sim"]
     )
     motivo = st.text_area("Motivo / Assunto da Reunião")
 
@@ -75,6 +85,7 @@ with aba1:
                   "Setor": setor,
                   "Data": data_str,
                   "Turno": turno,
+                  "Datashow": datashow,
                   "Motivo": motivo,
               }]
           )
@@ -82,13 +93,24 @@ with aba1:
               [df_agendamentos, novo_registro], ignore_index=True
           )
           salvar_dados(df_agendamentos)
+
           st.success("✅ Sala agendada com sucesso!")
+
+          # Mensagem específica caso tenha selecionado Datashow
+          if datashow == "Sim":
+            st.warning(
+                "⚠️ **Atenção:** Você selecionou que precisará de"
+                " **Datashow**. Por favor, entre em contato com o **Núcleo de"
+                " Tecnologias Educacionais** para solicitar e garantir a"
+                " reserva do equipamento!"
+            )
 
   st.divider()
   st.subheader("Dias já reservados:")
   if not df_agendamentos.empty:
     st.dataframe(
-        df_agendamentos[["Data", "Turno", "Setor"]], use_container_width=True
+        df_agendamentos[["Data", "Turno", "Setor", "Datashow"]],
+        use_container_width=True,
     )
   else:
     st.info("Nenhum agendamento realizado até o momento.")
@@ -96,9 +118,7 @@ with aba1:
 with aba2:
   st.subheader("🔒 Área Restrita - Painel do Secretário")
 
-  # Senha configurada para o secretário
   SENHA_MESTRE = "semed01"
-
   senha_digitada = st.text_input(
       "Digite a senha de acesso ao painel:", type="password"
   )
