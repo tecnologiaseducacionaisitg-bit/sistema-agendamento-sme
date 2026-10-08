@@ -96,7 +96,6 @@ with aba1:
 
           st.success("✅ Sala agendada com sucesso!")
 
-          # Mensagem específica caso tenha selecionado Datashow
           if datashow == "Sim":
             st.warning(
                 "⚠️ **Atenção:** Você selecionou que precisará de"
@@ -127,8 +126,54 @@ with aba2:
     st.success("Acesso autorizado!")
 
     if df_agendamentos.empty:
-      st.info("Ainda não há dados para gerar relatórios.")
+      st.info("Ainda não há dados para gerenciar.")
     else:
+      st.markdown("### 🗑️ Excluir Agendamento Incorreto")
+      st.write(
+          "Selecione abaixo o agendamento que deseja remover (por ID da linha"
+          " ou detalhes):"
+      )
+
+      # Criar uma coluna de identificação amigável para cada linha
+      df_agendamentos["Identificacao"] = (
+          df_agendamentos.index.astype(str)
+          + " - Data: "
+          + df_agendamentos["Data"]
+          + " | Turno: "
+          + df_agendamentos["Turno"]
+          + " | Setor: "
+          + df_agendamentos["Setor"]
+          + " | Responsável: "
+          + df_agendamentos["Nome"]
+      )
+
+      item_selecionado = st.selectbox(
+          "Escolha o agendamento para excluir:",
+          df_agendamentos["Identificacao"].tolist(),
+      )
+
+      if st.button("Excluir Agendamento Selecionado"):
+        # Pegar o índice da linha escolhida
+        indice_para_remover = int(item_selecionado.split(" - ")[0])
+
+        # Remover a linha do DataFrame
+        df_agendamentos = df_agendamentos.drop(indice_para_remover)
+
+        # Remover a coluna auxiliar temporária antes de salvar
+        df_agendamentos = df_agendamentos.drop(columns=["Identificacao"])
+
+        # Salvar as alterações no arquivo CSV
+        salvar_dados(df_agendamentos)
+
+        st.success("🗑️ Agendamento excluído com sucesso! Atualize a página.")
+        st.rerun()
+
+      # Limpar a coluna temporária se não foi excluído agora para não atrapalhar o relatório
+      if "Identificacao" in df_agendamentos.columns:
+        df_agendamentos = df_agendamentos.drop(columns=["Identificacao"])
+
+      st.divider()
+
       st.markdown("### 🏆 Pessoas que mais utilizam a sala")
       ranking_pessoas = df_agendamentos["Nome"].value_counts().reset_index()
       ranking_pessoas.columns = ["Nome", "Total de Agendamentos"]
