@@ -94,27 +94,42 @@ with aba1:
     st.info("Nenhum agendamento realizado até o momento.")
 
 with aba2:
-  st.subheader("📊 Painel de Controle e Relatórios")
-  if df_agendamentos.empty:
-    st.info("Ainda não há dados para gerar relatórios.")
+  st.subheader("🔒 Área Restrita - Painel do Secretário")
+
+  # Senha configurada para o secretário
+  SENHA_MESTRE = "semed01"
+
+  senha_digitada = st.text_input(
+      "Digite a senha de acesso ao painel:", type="password"
+  )
+
+  if senha_digitada == SENHA_MESTRE:
+    st.success("Acesso autorizado!")
+
+    if df_agendamentos.empty:
+      st.info("Ainda não há dados para gerar relatórios.")
+    else:
+      st.markdown("### 🏆 Pessoas que mais utilizam a sala")
+      ranking_pessoas = df_agendamentos["Nome"].value_counts().reset_index()
+      ranking_pessoas.columns = ["Nome", "Total de Agendamentos"]
+      st.dataframe(ranking_pessoas, use_container_width=True)
+
+      st.markdown("### 🏢 Agendamentos por Setor")
+      ranking_setor = df_agendamentos["Setor"].value_counts().reset_index()
+      ranking_setor.columns = ["Setor", "Total"]
+      st.bar_chart(ranking_setor.set_index("Setor"))
+
+      st.markdown("### 📋 Histórico Completo de Reservas")
+      st.dataframe(df_agendamentos, use_container_width=True)
+
+      csv = df_agendamentos.to_csv(index=False).encode("utf-8")
+      st.download_button(
+          label="Baixar Relatório em CSV (Excel)",
+          data=csv,
+          file_name="relatorio_sala_reuniao.csv",
+          mime="text/csv",
+      )
+  elif senha_digitada != "":
+    st.error("❌ Senha incorreta! Apenas o secretário possui acesso.")
   else:
-    st.markdown("### 🏆 Pessoas que mais utilizam a sala")
-    ranking_pessoas = df_agendamentos["Nome"].value_counts().reset_index()
-    ranking_pessoas.columns = ["Nome", "Total de Agendamentos"]
-    st.dataframe(ranking_pessoas, use_container_width=True)
-
-    st.markdown("### 🏢 Agendamentos por Setor")
-    ranking_setor = df_agendamentos["Setor"].value_counts().reset_index()
-    ranking_setor.columns = ["Setor", "Total"]
-    st.bar_chart(ranking_setor.set_index("Setor"))
-
-    st.markdown("### 📋 Histórico Completo de Reservas")
-    st.dataframe(df_agendamentos, use_container_width=True)
-
-    csv = df_agendamentos.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="Baixar Relatório em CSV (Excel)",
-        data=csv,
-        file_name="relatorio_sala_reuniao.csv",
-        mime="text/csv",
-    )
+    st.info("Por favor, digite a senha para visualizar os relatórios.")
